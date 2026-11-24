@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171a21"><title>3D Viewer</title><link rel="stylesheet" href="/src/style.css"></head>
+<body>
+<header><button id="bFile" class="hb">☰ File ▾</button><span id="as">Autosaved locally ✓</span><button id="bExpT" class="exp">⬆ Export STL</button></header>
+<div id="menu" class="closed">
+<div class="mrow2"><button id="mSave" class="pri">⬇ Save to device</button><button id="mShare">⤴ Share</button></div>
+<button id="mNew">📄 New workspace</button><button id="mOpen">📂 Open project</button><button id="mSaveP">💾 Save project</button>
+<button class="off">☁ Save to Cloud… (jaldi)</button>
+<div class="mh">RECENT PROJECTS <small>Local history</small></div><div id="recent"></div><hr>
+<button id="mImp">⬇ Import STL/3MF/GLB/OBJ/ZIP</button>
+<button data-x="stl-s" class="s">Export selected STL</button><button data-x="stl-a">Export all STL</button>
+<button data-x="glb-s" class="s">Export selected GLB</button><button data-x="glb-a">Export all GLB</button>
+<button data-x="obj-s" class="s">Export selected OBJ</button><button data-x="obj-a">Export all OBJ</button></div>
+<div id="bar">
+<button id="bUndo">↶</button><button id="bRedo">↷</button><button id="bDup">⧉</button><button id="bDel">🗑</button><i></i>
+<button id="tMove" data-tool="move"><b>✥</b><small>Move</small></button><button id="tRot" data-tool="rotate"><b>⟳</b><small>Rotate</small></button><button id="tScale" data-tool="scale" class="on"><b>⤢</b><small>Scale</small></button><i></i>
+<button id="bMode">▦</button><button id="bArr">⇔</button><button id="bFit">⛶</button><button id="bLock">🔓</button><i></i>
+<label class="sn">Snap <select id="snap"><option value="0">Off</option><option value="0.1">0.1</option><option value="0.5">0.5</option><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></label></div>
+<div id="view"><canvas id="c"></canvas><div id="labels"></div><div id="alab"></div>
+<div id="rhud"><span class="z" id="hZ"></span><span class="y" id="hY"></span><span class="x" id="hX"></span></div>
+<div id="vg"><button data-v="iso">ISO</button><button data-v="x" class="x">X</button><button data-v="y" class="y">Y</button><button data-v="z" class="z">Z</button></div>
+<div id="pills"><button id="pDel">🗑 Delete</button><button id="pHide">⌄ Panels</button></div>
+<label class="fab">＋<input id="file" type="file" multiple hidden></label><input id="fileP" type="file" hidden>
+<div id="hint">＋ dabao aur STL / 3MF / GLB / OBJ / ZIP kholo (max 10)</div><div id="toast"></div></div>
+<div id="sheet"><div id="grab"></div>
+<nav id="tabs"><button data-t="sel" class="on">Selection</button><button data-t="lay">Layers</button><button data-t="ins">Inspect</button></nav>
+<section id="p-sel">
+<div id="selHead"><span class="badge">SOLID</span><b id="nmT"></b><div id="szT"></div></div>
+<input id="nmI" class="txt" placeholder="Name">
+<details open><summary>GEOMETRY</summary>
+<div class="g3"><label class="c r">W<input id="iW" type="number" step="0.1" min="0.1"></label><label class="c g">D<input id="iD" type="number" step="0.1" min="0.1"></label><label class="c b">H<input id="iH" type="number" step="0.1" min="0.1"></label></div>
+<div class="sl"><span class="r">W</span><input id="sW" type="range" step="0.1" min="1"></div>
+<div class="sl"><span class="g">D</span><input id="sD" type="range" step="0.1" min="1"></div>
+<div class="sl"><span class="b">H</span><input id="sH" type="range" step="0.1" min="1"></div>
+<div class="set">Scale <input id="iP" type="number" min="1"> % <label><input type="checkbox" id="lock" checked> Lock</label> <button id="rst">Reset</button></div></details>
+<details open><summary>TRANSFORM</summary><small class="lb">POSITION MM</small>
+<div class="g3"><label class="c r">X<input id="pX" type="number" step="1"></label><label class="c g">Y<input id="pY" type="number" step="1"></label><label class="c b">Z<input id="pZ" type="number" step="1"></label></div>
+<small class="lb">ROTATION °</small>
+<div class="g3"><label class="c r">X<input id="rX" type="number" step="15"></label><label class="c g">Y<input id="rY" type="number" step="15"></label><label class="c b">Z<input id="rZ" type="number" step="15"></label></div></details>
+<details open><summary>APPEARANCE</summary><small class="lb">PRESETS</small><div id="pre"></div><small class="lb">COLOR</small><div id="sws"></div></details>
+</section>
+<section id="p-lay" hidden><div id="list"></div></section>
+<section id="p-ins" hidden><div id="cards"></div>
+<div class="set"><button id="chkS">🔍 Check selected</button><button id="chkV">🧊 Check visible</button></div>
+<table id="mt"></table>
+<div class="set">Infill (PLA/PETG/ABS) <input id="inf" type="range" min="5" max="100" value="20"><span id="infv">20%</span></div>
+<div class="note">Resin solid maana gaya hai. Weight sirf andaza hai.</div></section></div>
+<script type="module" src="/src/main.js"></script>
+</body></html>
