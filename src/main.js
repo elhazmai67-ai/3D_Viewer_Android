@@ -14,7 +14,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 
 const $ = s => document.querySelector(s), V3 = THREE.Vector3, V2 = THREE.Vector2, GAP = 20, MAX = 10, fmt = n => n.toFixed(1);
-const PAL = [0x4f8cff, 0xff8a4f, 0x5fd38d, 0xe0b84f, 0xb072ff, 0xff6b9a, 0x4fd1d9, 0xa3c84f, 0xd98a8a, 0x8a9bd9];
+const PAL = [0xeeeeee, 0xc4c4c4, 0xf7f7f7, 0xa6a6a6, 0xd8d8d8, 0xb5b5b5, 0xe2e2e2, 0x9a9a9a, 0xcfcfcf, 0xbababa];
 const SW = [0x19a8d1, 0xee7d2e, 0x4aa564, 0x6c6fd8, 0xd04d73, 0x587087, 0xffffff, 0xd8dce4, 0x9ca7b3, 0x465364, 0x1f2a3a, 0x0f1626, 0xef4444, 0xb91c1c, 0xf97316, 0xf59e0b, 0xfacc15, 0x84cc16, 0x22c55e, 0x15803d, 0x14b8a6, 0x06b6d4, 0x0284c7, 0x2563eb, 0x4f46e5, 0x7c3aed, 0xa855f7, 0xec4899, 0xbe185d, 0x8a5a33];
 const MATS = [['PLA', 1.24, 1], ['PETG', 1.27, 1], ['ABS', 1.04, 1], ['Resin', 1.10, 0]]; // name, g/cm3, uses infill
 const PRESETS = [['Matte Plastic', { r: .85, m: 0 }, 0], ['PLA', { r: .55, m: .05 }, 0], ['PETG', { r: .25, m: .05, o: .85 }, 1], ['ABS', { r: .4, m: .05 }, 2], ['Resin', { r: .2, m: 0, o: .8 }, 3],
@@ -24,35 +24,56 @@ const AXV = { x: new V3(1, 0, 0), y: new V3(0, 1, 0), z: new V3(0, 0, 1) }, COL 
 
 const canvas = $('#c'), view = $('#view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0d0a1a);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0a0a0a);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 10000), gcam = new THREE.PerspectiveCamera(45, 1, 0.1, 10000);
-const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.dampingFactor = 0.12;
-scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, .5));
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.dampingFactor = 0.1; controls.rotateSpeed = .9; controls.zoomSpeed = 1.1;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x333333, .5));
 const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(300, -400, 600); scene.add(sun);
-const grid = new THREE.GridHelper(600, 30, 0x3d3262, 0x1f1838); grid.rotation.x = Math.PI / 2; scene.add(grid);
+const grid = new THREE.GridHelper(600, 30, 0x3a3a3a, 0x1c1c1c); grid.rotation.x = Math.PI / 2; scene.add(grid);
 
 let models = [], mode = 'scene', tool = 'scale', selId = null, base = 300, uid = 0, snapV = 0, dirty = true, drag = null, gzOn = false, tw = null, undo = [], redo = [], saveT = null, restoring = false;
 const gC = new V3(); let gR = 1;
 const sel = () => models.find(x => x.id === selId), sn = v => (snapV ? Math.round(v / snapV) * snapV : v), T = new V3();
-const toast = t => { const e = $('#toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => (e.style.opacity = 0), 1900); };
+const IC = {
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>', down: '<path d="m6 9 6 6 6-6"/>', up: '<path d="m18 15-6-6-6 6"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>', redo: '<path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+  move: '<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>',
+  rotate: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>', scale: '<path d="M4 20 20 4M14 4h6v6M10 20H4v-6"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+  arrange: '<path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/>', fit: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>', unlock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>', upload: '<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+  filePlus: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15h6"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  save: '<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7M8 20v-6h8v6"/>', cloud: '<path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9a4.5 4.5 0 0 1 0 9z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>', cube: '<path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>', check: '<path d="m5 12 5 5 9-10"/>', sync: '<path d="M20 11a8 8 0 0 0-14-4M4 4v4h4M4 13a8 8 0 0 0 14 4M20 20v-4h-4"/>',
+  target: '<circle cx="12" cy="12" r="3"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>', layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>'
+};
+const ic = (n, c = '') => '<svg class="ic ' + c + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">' + IC[n] + '</svg>';
+document.querySelectorAll('[data-i]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.i)));
+const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('show'), 1900); };
 
 // ---------- storage (IndexedDB): autosave + projects ----------
 const dbp = new Promise(r => { try { const q = indexedDB.open('v3d2', 1); q.onupgradeneeded = () => q.result.createObjectStore('p', { keyPath: 'id' }); q.onsuccess = () => r(q.result); q.onerror = () => r(null); } catch (e) { r(null); } });
 const tx = async (md, f) => { const d = await dbp; if (!d) return; return new Promise(r => { try { const q = f(d.transaction('p', md).objectStore('p')); q.onsuccess = () => r(q.result); q.onerror = () => r(); } catch (e) { r(); } }); };
 const items = () => models.map(m => ({ name: m.name, data: m.buf, sc: m.sc.toArray(), q: m.q.toArray(), pos: m.pos.toArray(), color: m.color, preset: m.preset, mat: m.mat, visible: m.visible, styled: m.styled }));
 const putProject = (id, name) => tx('readwrite', s => s.put({ id, name, t: Date.now(), n: models.length, items: items() }));
-function setAS(t) { $('#as').textContent = t; }
+function setAS(t, busy) { if (setAS.k === t) return; setAS.k = t; $('#as').innerHTML = ic(busy ? 'sync' : 'check', busy ? 'spin' : '') + '<span></span>'; $('#as span').textContent = t; }
 function changed() {
-  dirty = true; if (restoring) return; setAS('Autosaving… ⟳'); clearTimeout(saveT);
-  saveT = setTimeout(async () => { await putProject('autosave', 'Autosave'); setAS('Autosaved locally ✓'); renderRecent(); }, 1200);
+  dirty = true; if (restoring) return; setAS('Autosaving…', 1); clearTimeout(saveT);
+  saveT = setTimeout(async () => { await putProject('autosave', 'Autosave'); setAS('Autosaved locally'); renderRecent(); }, 1200);
 }
 async function renderRecent() {
   const all = ((await tx('readonly', s => s.getAll())) || []).sort((a, b) => b.t - a.t), R = $('#recent'); R.innerHTML = '';
   if (!all.length) R.innerHTML = '<div class="rr"><small>Abhi koi project nahi</small></div>';
   all.forEach(p => {
-    const r = document.createElement('div'); r.className = 'rr'; r.innerHTML = '<div><span></span><small></small></div><button>✕</button>';
+    const r = document.createElement('div'); r.className = 'rr'; r.innerHTML = '<div><span></span><small></small></div><button>' + ic('x') + '</button>';
     r.querySelector('span').textContent = p.name; r.querySelector('small').textContent = p.n + ' object' + (p.n === 1 ? '' : 's') + ' · ' + new Date(p.t).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
     r.onclick = () => { closeMenu(); openItems(p.items, p.name); };
     r.querySelector('button').onclick = async e => { e.stopPropagation(); await tx('readwrite', s => s.delete(p.id)); renderRecent(); };
@@ -197,7 +218,7 @@ function arrange() {
 }
 function animTo(pos, tar, dur = 380) { tw = { t0: performance.now(), dur, p0: camera.position.clone(), p1: pos, a0: controls.target.clone(), a1: tar }; dirty = true; }
 function stepTw(now) {
-  if (!tw) return; const k = Math.min(1, (now - tw.t0) / tw.dur), e = 1 - Math.pow(1 - k, 3);
+  if (!tw) return; const k = Math.min(1, (now - tw.t0) / tw.dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
   camera.position.lerpVectors(tw.p0, tw.p1, e); controls.target.lerpVectors(tw.a0, tw.a1, e); if (k >= 1) tw = null; dirty = true;
 }
 function fit(anim) {
@@ -219,7 +240,8 @@ const doUndo = () => { if (!undo.length) return toast('Undo ke liye kuch nahi');
 const doRedo = () => { if (!redo.length) return toast('Redo ke liye kuch nahi'); undo.push(stateOf()); restore(redo.pop()); };
 
 // ---------- UI ----------
-function upd(m, list) { layout(); renderInfo(); if (list) renderList(); labels(); changed(); }
+function qInfo() { if (qInfo.q) return; qInfo.q = 1; requestAnimationFrame(() => { qInfo.q = 0; renderInfo(); }); }
+function upd(m, list) { layout(); qInfo(); if (list) renderList(); if (mode === 'grid') labels(); changed(); }
 function applyScale(m) { m.pop = 1; m.holder.scale.copy(m.sc); m.size.copy(m.base).multiply(m.sc); upd(m, true); }
 function setSize(m, ax, v, snap) {
   if (snap) v = sn(v); if (!(v > 0)) return; const k = Math.max(v, .1) / m.base[ax];
@@ -235,7 +257,7 @@ function renderList() {
   const A = $('#list'); A.innerHTML = '';
   models.forEach(m => {
     const r = document.createElement('div'); r.className = 'row' + (m.id === selId ? ' sel' : '');
-    r.innerHTML = '<input type="checkbox"' + (m.visible ? ' checked' : '') + '><div class="nm"><span></span><small></small></div><button>⧉</button><button>🗑</button>';
+    r.innerHTML = '<input type="checkbox"' + (m.visible ? ' checked' : '') + '><div class="nm"><span></span><small></small></div><button>' + ic('copy') + '</button><button>' + ic('trash') + '</button>';
     r.querySelector('span').textContent = m.name;
     r.querySelector('small').textContent = m.size.toArray().map(fmt).join(' × ') + ' mm' + (m.sc.x === 1 && m.sc.y === 1 && m.sc.z === 1 ? '' : ' (' + Math.round(m.sc.x * 100) + '%)');
     r.querySelector('input').onclick = e => { e.stopPropagation(); pushUndo(); m.visible = e.target.checked; refresh(); changed(); };
@@ -329,14 +351,15 @@ view.addEventListener('pointerdown', e => {
     drag = { ...base0, kind: tool, u: v.clone().normalize(), pxmm, s0: tool === 'scale' ? m.size[it.ax] : m.pos[it.ax] };
   }
 }, true);
-window.addEventListener('pointermove', e => {
-  if (!drag) return; const d = drag, m = d.m, px = (e.clientX - d.x0) * d.u.x + (e.clientY - d.y0) * d.u.y;
+window.addEventListener('pointermove', e => { if (drag) { drag.ev = e; dirty = true; } });
+function applyDrag(e) {
+  const d = drag, m = d.m, px = (e.clientX - d.x0) * d.u.x + (e.clientY - d.y0) * d.u.y;
   if (d.kind === 'scale') setSize(m, d.it.ax, d.s0 + (d.it.ax === 'z' ? 1 : 2) * px / d.pxmm, true);
   else if (d.kind === 'move') { m.pos[d.it.ax] = sn(d.s0 + px / d.pxmm); upd(m); }
   else { m.q.copy(d.qs).premultiply(new THREE.Quaternion().setFromAxisAngle(d.A, px * d.k)); settle(m); upd(m); }
   dirty = true;
-});
-window.addEventListener('pointerup', () => { if (drag) { drag = null; renderList(); renderInfo(); } });
+}
+window.addEventListener('pointerup', () => { if (drag) { if (drag.ev) applyDrag(drag.ev); drag = null; renderList(); renderInfo(); } });
 window.addEventListener('pointercancel', () => (drag = null));
 
 // ---------- render loop (draws only when something changes = smooth + battery friendly) ----------
@@ -357,9 +380,11 @@ function draw() {
     models.forEach(o => (o.holder.visible = o.visible));
   } else { renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H); camera.aspect = W / H; camera.updateProjectionMatrix(); renderer.render(scene, camera); }
 }
+let last = 0;
 function frame(now) {
-  requestAnimationFrame(frame); stepTw(now); let pop = false;
-  models.forEach(m => { if (m.pop < 1) { m.pop = Math.min(1, m.pop + .07); m.holder.scale.copy(m.sc).multiplyScalar(Math.max(1 - Math.pow(1 - m.pop, 3), .02)); pop = true; } });
+  requestAnimationFrame(frame); const dt = Math.min(now - last, 50) || 16; last = now; stepTw(now); let pop = false;
+  if (drag && drag.ev) { const ev = drag.ev; drag.ev = null; applyDrag(ev); }
+  models.forEach(m => { if (m.pop < 1) { m.pop = Math.min(1, m.pop + dt / 260); m.holder.scale.copy(m.sc).multiplyScalar(Math.max(1 - Math.pow(1 - m.pop, 3), .02)); pop = true; } });
   const ch = controls.update(); if (!(ch || dirty || pop || drag)) return; dirty = false; draw();
 }
 
@@ -382,10 +407,10 @@ document.querySelectorAll('[data-tool]').forEach(b => (b.onclick = () => { tool 
 $('#bMode').onclick = () => { mode = mode === 'scene' ? 'grid' : 'scene'; toast(mode === 'grid' ? 'Grid mode' : 'Scene mode'); refresh(true); };
 $('#bArr').onclick = () => { pushUndo(); arrange(); refresh(true); changed(); };
 $('#bFit').onclick = () => fit(true);
-$('#bLock').onclick = () => { controls.enabled = !controls.enabled; $('#bLock').textContent = controls.enabled ? '🔓' : '🔒'; toast(controls.enabled ? 'View unlock' : 'View lock'); };
+$('#bLock').onclick = () => { controls.enabled = !controls.enabled; $('#bLock').innerHTML = ic(controls.enabled ? 'unlock' : 'lock'); toast(controls.enabled ? 'View unlock' : 'View lock'); };
 $('#snap').onchange = e => (snapV = +e.target.value);
 document.querySelectorAll('[data-v]').forEach(b => (b.onclick = () => setView({ iso: new V3(1, -1.2, .9), x: new V3(1, 0, 0), y: new V3(0, -1, 0), z: new V3(0, -.001, 1) }[b.dataset.v])));
-$('#pHide').onclick = () => { const h = $('#sheet').classList.toggle('hide'); document.body.classList.toggle('nopanel', h); $('#pHide').textContent = (h ? '⌃' : '⌄') + ' Panels'; };
+$('#pHide').onclick = () => { const h = $('#sheet').classList.toggle('hide'); document.body.classList.toggle('nopanel', h); $('#pHide').innerHTML = ic(h ? 'up' : 'down') + ' Panels'; };
 $('#tabs').onclick = e => { if (e.target.dataset.t) tab(e.target.dataset.t); };
 $('#inf').oninput = () => { $('#infv').textContent = $('#inf').value + '%'; renderInfo(); };
 $('#chkS').onclick = () => { const m = sel(); if (m) { checkMesh(m); renderInfo(); toast(m.status); } };
@@ -415,5 +440,5 @@ canvas.addEventListener('pointerup', e => {
 view.ondragover = e => e.preventDefault();
 view.ondrop = e => { e.preventDefault(); handleFiles([...e.dataTransfer.files]); };
 
-tab('sel'); refresh(); renderRecent(); requestAnimationFrame(frame);
+setAS('Autosaved locally'); tab('sel'); refresh(); renderRecent(); requestAnimationFrame(frame);
 (async () => { const a = await tx('readonly', s => s.get('autosave')); if (a && a.items && a.items.length) { restoring = true; await loadItems(a.items); restoring = false; refresh(true); toast('Pichla workspace wapas aa gaya'); } })();
