@@ -15,6 +15,10 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npx cap add android
+      - name: App icon and splash
+        run: |
+          cp -r android-res/. android/app/src/main/res/
+          find android/app/src/main/res -name 'splash.png' -exec cp android-res/splash.png {} \;
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
