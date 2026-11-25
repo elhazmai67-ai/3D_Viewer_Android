@@ -21,7 +21,7 @@ jobs:
           which convert || sudo apt-get install -y imagemagick
           RES=android/app/src/main/res
           if [ -f icon-fg.png ]; then
-            BG="gradient:#4e3492-#14102a"
+            BG="gradient:#2c2c2c-#050505"
             for e in mdpi:108:48 hdpi:162:72 xhdpi:216:96 xxhdpi:324:144 xxxhdpi:432:192; do
               IFS=: read n a l <<< "$e"
               d=$RES/mipmap-$n
