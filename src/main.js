@@ -25,13 +25,13 @@ const AXV = { x: new V3(1, 0, 0), y: new V3(0, 1, 0), z: new V3(0, 0, 1) }, COL 
 const canvas = $('#c'), view = $('#view');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0f1115);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x0d0a1a);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 10000), gcam = new THREE.PerspectiveCamera(45, 1, 0.1, 10000);
 const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.dampingFactor = 0.12;
 scene.add(new THREE.HemisphereLight(0xffffff, 0x333344, .5));
 const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(300, -400, 600); scene.add(sun);
-const grid = new THREE.GridHelper(600, 30, 0x3a4250, 0x232832); grid.rotation.x = Math.PI / 2; scene.add(grid);
+const grid = new THREE.GridHelper(600, 30, 0x3d3262, 0x1f1838); grid.rotation.x = Math.PI / 2; scene.add(grid);
 
 let models = [], mode = 'scene', tool = 'scale', selId = null, base = 300, uid = 0, snapV = 0, dirty = true, drag = null, gzOn = false, tw = null, undo = [], redo = [], saveT = null, restoring = false;
 const gC = new V3(); let gR = 1;
