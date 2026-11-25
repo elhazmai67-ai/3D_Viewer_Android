@@ -1,31 +1,31 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#151027"><title>3D Viewer</title><link rel="stylesheet" href="/src/style.css"></head>
+<meta name="theme-color" content="#121212"><title>3D Viewer</title><link rel="stylesheet" href="/src/style.css"></head>
 <body>
-<header><button id="bFile" class="hb">☰ File ▾</button><span id="as">Autosaved locally ✓</span><button id="bExpT" class="exp">⬆ Export STL</button></header>
+<header><button id="bFile" class="hb" data-i="menu">File<span class="chev" data-i="down"></span></button><span id="as"></span><button id="bExpT" class="exp" data-i="upload">Export STL</button></header>
 <div id="menu" class="closed">
-<div class="mrow2"><button id="mSave" class="pri">⬇ Save to device</button><button id="mShare">⤴ Share</button></div>
-<button id="mNew">📄 New workspace</button><button id="mOpen">📂 Open project</button><button id="mSaveP">💾 Save project</button>
-<button class="off">☁ Save to Cloud… (jaldi)</button>
+<div class="mrow2"><button id="mSave" class="pri" data-i="download">Save to device</button><button id="mShare" data-i="share">Share</button></div>
+<button id="mNew" data-i="filePlus">New workspace</button><button id="mOpen" data-i="folder">Open project</button><button id="mSaveP" data-i="save">Save project</button>
+<button class="off" data-i="cloud">Save to Cloud… (jaldi)</button>
 <div class="mh">RECENT PROJECTS <small>Local history</small></div><div id="recent"></div><hr>
-<button id="mImp">⬇ Import STL/3MF/GLB/OBJ/ZIP</button>
-<button data-x="stl-s" class="s">Export selected STL</button><button data-x="stl-a">Export all STL</button>
-<button data-x="glb-s" class="s">Export selected GLB</button><button data-x="glb-a">Export all GLB</button>
-<button data-x="obj-s" class="s">Export selected OBJ</button><button data-x="obj-a">Export all OBJ</button></div>
+<button id="mImp" data-i="download">Import STL/3MF/GLB/OBJ/ZIP</button>
+<button data-x="stl-s" class="s" data-i="upload">Export selected STL</button><button data-x="stl-a" data-i="upload">Export all STL</button>
+<button data-x="glb-s" class="s" data-i="upload">Export selected GLB</button><button data-x="glb-a" data-i="upload">Export all GLB</button>
+<button data-x="obj-s" class="s" data-i="upload">Export selected OBJ</button><button data-x="obj-a" data-i="upload">Export all OBJ</button></div>
 <div id="bar">
-<button id="bUndo">↶</button><button id="bRedo">↷</button><button id="bDup">⧉</button><button id="bDel">🗑</button><i></i>
-<button id="tMove" data-tool="move"><b>✥</b><small>Move</small></button><button id="tRot" data-tool="rotate"><b>⟳</b><small>Rotate</small></button><button id="tScale" data-tool="scale" class="on"><b>⤢</b><small>Scale</small></button><i></i>
-<button id="bMode">▦</button><button id="bArr">⇔</button><button id="bFit">⛶</button><button id="bLock">🔓</button><i></i>
+<button id="bUndo" data-i="undo" title="Undo"></button><button id="bRedo" data-i="redo" title="Redo"></button><button id="bDup" data-i="copy" title="Duplicate"></button><button id="bDel" data-i="trash" title="Delete"></button><i></i>
+<button data-tool="move"><span data-i="move"></span><small>Move</small></button><button data-tool="rotate"><span data-i="rotate"></span><small>Rotate</small></button><button data-tool="scale" class="on"><span data-i="scale"></span><small>Scale</small></button><i></i>
+<button id="bMode" data-i="grid" title="Scene / Grid"></button><button id="bArr" data-i="arrange" title="Auto arrange"></button><button id="bFit" data-i="fit" title="Fit"></button><button id="bLock" data-i="unlock" title="View lock"></button><i></i>
 <label class="sn">Snap <select id="snap"><option value="0">Off</option><option value="0.1">0.1</option><option value="0.5">0.5</option><option value="1">1 mm</option><option value="5">5 mm</option><option value="10">10 mm</option></select></label></div>
 <div id="view"><canvas id="c"></canvas><div id="labels"></div><div id="alab"></div>
 <div id="rhud"><span class="z" id="hZ"></span><span class="y" id="hY"></span><span class="x" id="hX"></span></div>
 <div id="vg"><button data-v="iso">ISO</button><button data-v="x" class="x">X</button><button data-v="y" class="y">Y</button><button data-v="z" class="z">Z</button></div>
-<div id="pills"><button id="pDel">🗑 Delete</button><button id="pHide">⌄ Panels</button></div>
-<label class="fab">＋<input id="file" type="file" multiple hidden></label><input id="fileP" type="file" hidden>
-<div id="hint">＋ dabao aur STL / 3MF / GLB / OBJ / ZIP kholo (max 10)</div><div id="toast"></div></div>
+<div id="pills"><button id="pDel" data-i="trash">Delete</button><button id="pHide" data-i="down">Panels</button></div>
+<label class="fab" data-i="plus"><input id="file" type="file" multiple hidden></label><input id="fileP" type="file" hidden>
+<div id="hint">Plus dabao aur STL / 3MF / GLB / OBJ / ZIP kholo (max 10)</div><div id="toast"></div></div>
 <div id="sheet"><div id="grab"></div>
-<nav id="tabs"><button data-t="sel" class="on">Selection</button><button data-t="lay">Layers</button><button data-t="ins">Inspect</button></nav>
+<nav id="tabs"><button data-t="sel" data-i="target" class="on">Selection</button><button data-t="lay" data-i="layers">Layers</button><button data-t="ins" data-i="search">Inspect</button></nav>
 <section id="p-sel">
 <div id="selHead"><span class="badge">SOLID</span><b id="nmT"></b><div id="szT"></div></div>
 <input id="nmI" class="txt" placeholder="Name">
@@ -43,7 +43,7 @@
 </section>
 <section id="p-lay" hidden><div id="list"></div></section>
 <section id="p-ins" hidden><div id="cards"></div>
-<div class="set"><button id="chkS">🔍 Check selected</button><button id="chkV">🧊 Check visible</button></div>
+<div class="set"><button id="chkS" data-i="search">Check selected</button><button id="chkV" data-i="cube">Check visible</button></div>
 <table id="mt"></table>
 <div class="set">Infill (PLA/PETG/ABS) <input id="inf" type="range" min="5" max="100" value="20"><span id="infv">20%</span></div>
 <div class="note">Resin solid maana gaya hai. Weight sirf andaza hai.</div></section></div>

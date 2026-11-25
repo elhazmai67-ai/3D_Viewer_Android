@@ -2,5 +2,5 @@
   "appId": "com.viewer3d.app",
   "appName": "3D Viewer",
   "webDir": "dist",
-  "backgroundColor": "#0d0a1a"
+  "backgroundColor": "#0a0a0a"
 }
