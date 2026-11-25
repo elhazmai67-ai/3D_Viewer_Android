@@ -16,9 +16,27 @@ jobs:
       - run: npm run build
       - run: npx cap add android
       - name: App icon and splash
+        continue-on-error: true
         run: |
-          cp -r android-res/. android/app/src/main/res/
-          find android/app/src/main/res -name 'splash.png' -exec cp android-res/splash.png {} \;
+          which convert || sudo apt-get install -y imagemagick
+          RES=android/app/src/main/res
+          if [ -f icon-fg.png ]; then
+            BG="gradient:#4e3492-#14102a"
+            for e in mdpi:108:48 hdpi:162:72 xhdpi:216:96 xxhdpi:324:144 xxxhdpi:432:192; do
+              IFS=: read n a l <<< "$e"
+              d=$RES/mipmap-$n
+              mkdir -p $d
+              convert icon-fg.png -resize ${a}x${a} $d/ic_launcher_fg.png
+              convert -size ${a}x${a} "$BG" $d/ic_launcher_bg.png
+              convert -size ${l}x${l} "$BG" \( icon-fg.png -resize ${l}x${l} \) -composite $d/ic_launcher.png
+              cp $d/ic_launcher.png $d/ic_launcher_round.png
+            done
+            mkdir -p $RES/mipmap-anydpi-v26
+            for n in ic_launcher ic_launcher_round; do
+              printf '<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n<background android:drawable="@mipmap/ic_launcher_bg"/>\n<foreground android:drawable="@mipmap/ic_launcher_fg"/>\n</adaptive-icon>\n' > $RES/mipmap-anydpi-v26/$n.xml
+            done
+          fi
+          if [ -f splash.png ]; then find $RES -name 'splash.png' -exec cp splash.png {} \; ; fi
       - run: npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
